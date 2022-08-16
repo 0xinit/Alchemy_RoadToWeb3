@@ -1,0 +1,1 @@
+This is all my work for Alchemy's RoadToWeb3 course. It's going to be mostly a dump of every week's work but only because I already know most of the material. I am just finishing it for the sake of finishing it. :))
