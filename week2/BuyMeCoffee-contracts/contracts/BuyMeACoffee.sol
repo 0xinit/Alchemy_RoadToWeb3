@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
-// Example deployed to Goerli: 0xDBa03676a2fBb6711CB652beF5B7416A53c1421D
+// deployed to Goerli: 0x77A081E6E8860280686A20152137F40e19a1490f
 
 contract BuyMeACoffee {
     // Event to emit when a Memo is created.
@@ -31,6 +31,11 @@ contract BuyMeACoffee {
         // Store the address of the deployer as a payable address.
         // When we withdraw funds, we'll withdraw here.
         owner = payable(msg.sender);
+    }
+
+    function changeOwner(address newAddress) public {
+        require(owner != msg.sender, "Only Owner can change/get new owner.");
+        owner = payable(newAddress);
     }
 
     /**
