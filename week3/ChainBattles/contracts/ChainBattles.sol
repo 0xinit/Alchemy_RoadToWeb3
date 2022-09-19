@@ -13,21 +13,25 @@ contract ChainBattles is ERC721URIStorage {
     Counters.Counter private _tokenIds;
 
     struct PlayerData {
-        uint256 id;
+        uint256 playerid;
         uint256 level;
         uint256 hp;
         uint256 strength;
         uint256 speed;
     }
 
-    mapping(uint256 => PlayerData) public tokenIdToLevels;
+    mapping(uint256 => PlayerData) public tokenIdToPlayerData;
 
     // Initializing the state variable
     uint256 randNonce = 0;
 
     constructor() ERC721("Chain Battles", "CBTLS") {}
 
-    function generateCharacter(uint256 tokenId) public returns (string memory) {
+    function generateCharacter(uint256 tokenId)
+        public
+        view
+        returns (string memory)
+    {
         bytes memory svg = abi.encodePacked(
             '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350">',
             "<style>.base { fill: white; font-family: serif; font-size: 14px; }</style>",
@@ -35,20 +39,20 @@ contract ChainBattles is ERC721URIStorage {
             '<text x="50%" y="30%" class="base" dominant-baseline="middle" text-anchor="middle">',
             "Warrior",
             "</text>",
-            "<text x='50%' y='40%' class='base' dominant-baseline='middle' text-anchor='middle'>Id:",
+            "<text x='50%' y='40%' class='base' dominant-baseline='middle' text-anchor='middle'>Id: ",
             getId(tokenId),
             "</text>",
             '<text x="50%" y="50%" class="base" dominant-baseline="middle" text-anchor="middle">',
             "Levels: ",
             getLevels(tokenId),
             "</text>",
-            "<text x='50%' y='60%' class='base' dominant-baseline='middle' text-anchor='middle'>HP:",
+            "<text x='50%' y='60%' class='base' dominant-baseline='middle' text-anchor='middle'>HP: ",
             getHP(tokenId),
             "</text>",
-            "<text x='50%' y='70%' class='base' dominant-baseline='middle' text-anchor='middle'>Strength:",
+            "<text x='50%' y='70%' class='base' dominant-baseline='middle' text-anchor='middle'>Strength: ",
             getStrength(tokenId),
             " pascal</text>",
-            "<text x='50%' y='80%' class='base' dominant-baseline='middle' text-anchor='middle'>Speed:",
+            "<text x='50%' y='80%' class='base' dominant-baseline='middle' text-anchor='middle'>Speed: ",
             getSpeed(tokenId),
             " km/h</text>",
             "</svg>"
@@ -62,12 +66,43 @@ contract ChainBattles is ERC721URIStorage {
             );
     }
 
-    function getLevels(uint256 tokenId) public view returns (string memory) {
-        uint256 levels = tokenIdToLevels[tokenId];
-        return levels.toString();
+    function getId(uint256 tokenId) public view returns (string memory) {
+        PlayerData memory IDs = tokenIdToPlayerData[tokenId];
+        return IDs.playerid.toString();
     }
 
-    function getTokenURI(uint256 tokenId) public returns (string memory) {
+    function getLevels(uint256 tokenId) public view returns (string memory) {
+        PlayerData memory levels = tokenIdToPlayerData[tokenId];
+        return levels.level.toString();
+    }
+
+    function getHP(uint256 tokenId) public view returns (string memory) {
+        PlayerData memory playerHP = tokenIdToPlayerData[tokenId];
+        return playerHP.hp.toString();
+    }
+
+    function getStrength(uint256 tokenId) public view returns (string memory) {
+        PlayerData memory playerStrength = tokenIdToPlayerData[tokenId];
+        return playerStrength.strength.toString();
+    }
+
+    function getSpeed(uint256 tokenId) public view returns (string memory) {
+        PlayerData memory playerSpeed = tokenIdToPlayerData[tokenId];
+        return playerSpeed.speed.toString();
+    }
+
+    function createRandom() internal returns (uint256) {
+        // increase nonce
+        randNonce++;
+        return
+            uint256(
+                keccak256(
+                    abi.encodePacked(block.timestamp, msg.sender, randNonce)
+                )
+            ) % 100;
+    }
+
+    function getTokenURI(uint256 tokenId) public view returns (string memory) {
         bytes memory dataURI = abi.encodePacked(
             "{",
             '"name": "Chain Battles #',
@@ -92,18 +127,34 @@ contract ChainBattles is ERC721URIStorage {
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
-        tokenIdToLevels[newItemId] = 0;
+        // creating random id, speed, strength, life --- and keeping initial level = 1, and
+        PlayerData memory playerData = PlayerData(
+            newItemId,
+            1,
+            createRandom(),
+            createRandom(),
+            createRandom()
+        );
+        tokenIdToPlayerData[newItemId] = playerData;
         _setTokenURI(newItemId, getTokenURI(newItemId));
     }
 
     function train(uint256 tokenId) public {
-        require(_exists(tokenId));
+        require(_exists(tokenId), "Please use an existing Token");
         require(
             ownerOf(tokenId) == msg.sender,
-            "You must own the NFT to train it"
+            "You must own this token to train it"
         );
-        uint256 currentLevel = tokenIdToLevels[tokenId];
-        tokenIdToLevels[tokenId] = currentLevel + 1;
+        PlayerData memory currentPlayerData = tokenIdToPlayerData[tokenId];
+        PlayerData memory updatePlayerData;
+        updatePlayerData = PlayerData(
+            currentPlayerData.playerid,
+            currentPlayerData.level + 1,
+            currentPlayerData.hp + 5,
+            currentPlayerData.strength + 10,
+            currentPlayerData.speed + 25
+        );
+        tokenIdToPlayerData[tokenId] = updatePlayerData;
         _setTokenURI(tokenId, getTokenURI(tokenId));
     }
 }
