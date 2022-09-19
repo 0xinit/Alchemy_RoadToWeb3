@@ -127,7 +127,7 @@ contract ChainBattles is ERC721URIStorage {
         _tokenIds.increment();
         uint256 newItemId = _tokenIds.current();
         _safeMint(msg.sender, newItemId);
-        // creating random id, speed, strength, life --- and keeping initial level = 1, and
+        // creating random speed, strength, life --- keeping initial level = 1 (incrementing by 1 from here), and id constant
         PlayerData memory playerData = PlayerData(
             newItemId,
             1,
